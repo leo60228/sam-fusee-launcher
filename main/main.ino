@@ -6,26 +6,22 @@
 // Contains fuseeBin and FUSEE_BIN_SIZE
 #include "hekate_ctcaer_4.2.h"
 
+void setup() {
+    ledInit();
+    if (usbInit() == -1)
+        sleepDeep(-1);
 
-void setup()
-{
-  ledInit();
-  if (usbInit() == -1) sleepDeep(-1);
+    while (!searchTegraDevice()) {
+        ledBlink("orange", 1, 200);
+    }
 
-  while (!searchTegraDevice())
-  {
-    ledBlink("orange", 1, 200);
-  }
+    setupTegraDevice();
 
-  setupTegraDevice();
+    sendPayload(fuseeBin, FUSEE_BIN_SIZE);
 
-  sendPayload(fuseeBin, FUSEE_BIN_SIZE);
+    launchPayload();
 
-  launchPayload();
-
-  sleepDeep(1);
+    sleepDeep(1);
 }
 
-void loop()
-{
-}
+void loop() {}
