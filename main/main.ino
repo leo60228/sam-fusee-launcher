@@ -17,7 +17,7 @@ void setup() {
 
     setupTegraDevice();
 
-    sendPayload(fuseeBin, FUSEE_BIN_SIZE);
+    sendPayload(fuseeBin, FUSEE_BIN_SIZE, 0);
 
     launchPayload();
 

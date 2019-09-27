@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Usb.h>
+#include <assert.h>
 
 #define INTERMEZZO_SIZE 92
 const byte intermezzo[INTERMEZZO_SIZE] = {
@@ -105,7 +106,7 @@ void readTegraDeviceID(byte *deviceID) {
         return; // false; //add breakpoint
 }
 
-void sendPayload(const byte *payload, uint32_t payloadLength) {
+void sendPayload(const byte *payload, uint32_t payloadLength, uint8_t entry) {
     byte zeros[0x1000] = {0};
 
     usbBufferedWriteU32(0x30298);
@@ -114,9 +115,22 @@ void sendPayload(const byte *payload, uint32_t payloadLength) {
     for (uint32_t i = 0; i < 0x3C00; i++)
         usbBufferedWriteU32(0x4001F000);
 
+    int written = 0;
+
     usbBufferedWrite(intermezzo, INTERMEZZO_SIZE);
     usbBufferedWrite(zeros, 0xFA4);
-    usbBufferedWrite(payload, payloadLength);
+
+    usbBufferedWrite(payload + written, 0x94);
+    written += 0x94;
+
+    usbBufferedWrite((char[]){1}, 0x01);
+    written += 0x01;
+
+    usbBufferedWrite(payload + written, payloadLength - written);
+    written += payloadLength - written;
+
+    assert(written == payloadLength);
+
     usbFlushBuffer();
 
     if (packetsWritten % 2 != 1) {
