@@ -106,7 +106,7 @@ void readTegraDeviceID(byte *deviceID) {
         return; // false; //add breakpoint
 }
 
-void sendPayload(const byte *payload, uint32_t payloadLength, uint8_t entry) {
+void sendPayload(const byte *payload, uint32_t payloadLength, byte entry) {
     byte zeros[0x1000] = {0};
 
     usbBufferedWriteU32(0x30298);
@@ -123,8 +123,8 @@ void sendPayload(const byte *payload, uint32_t payloadLength, uint8_t entry) {
     usbBufferedWrite(payload + written, 0x94);
     written += 0x94;
 
-    usbBufferedWrite((char[]){1}, 0x01);
-    written += 0x01;
+    usbBufferedWrite((byte[]){1, entry}, 0x02);
+    written += 0x02;
 
     usbBufferedWrite(payload + written, payloadLength - written);
     written += payloadLength - written;
