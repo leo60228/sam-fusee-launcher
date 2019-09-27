@@ -4,7 +4,7 @@
 #include "trinketLed.h"
 
 // Contains fuseeBin and FUSEE_BIN_SIZE
-#include "hekate_ctcaer_4.2.h"
+#include "hekate_ctcaer_5.0.2.h"
 
 void setup() {
     ledInit();

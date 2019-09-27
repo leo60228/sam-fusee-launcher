@@ -1,7 +1,7 @@
+from textwrap import wrap
 import sys
 import binascii
 import os
-
 
 def printProgressBar(progress):
     i = int(progress * 20)
@@ -9,47 +9,42 @@ def printProgressBar(progress):
     sys.stdout.write("[%-20s] %d%%" % ('='*i, 5*i))
     sys.stdout.flush()
 
-def openFileToByte_generator(filename , chunkSize = 128):
-    fileSize = os.stat(filename).st_size
-    readBytes = 0.0
+def readChunks(filename, chunkSize = 128000):
+    readBytes = 0
     with open(filename, "rb") as f:
         while True:
             chunk = f.read(chunkSize)
-            #print(type(chunk))
-            readBytes += chunkSize
-            printProgressBar(readBytes/float(fileSize))
             if chunk:
-                for byte in chunk:
-                    if sys.version_info[0] < 3:
-                        yield byte
-                    else:
-                        yield byte.to_bytes(1, byteorder='big')
+                yield chunk
             else:
                 break
 
+def makeArray(filename):
+    stringBuffer = "    "
+    print("reading file: " + filename)
+
+    parts = []
+
+    length = 0
+
+    for chunk in readChunks(filename):
+        length += len(chunk)
+        parts.append(", ".join(["0x" + s for s in wrap(chunk.hex(), 2)]))
+
+    stringBuffer += "".join(parts)
+    stringBuffer = "#include <Arduino.h>\n\n#define FUSEE_BIN_SIZE " + str(length) + "\nconst byte fuseeBin[FUSEE_BIN_SIZE] = {\n" + stringBuffer + "\n};"
+
+    return stringBuffer
 
 if(len(sys.argv) is not 2):
-	sys.exit('usage: binConverter.py "pathToFile\\fileName.bin"')
+    sys.exit('usage: binConverter.py "pathToFile/fileName.bin"')
 
-fileIn = sys.argv[1]
+filename = sys.argv[1]
 
+base = os.path.splitext(filename)[0]
+fileOut = base + ".h"
 
-base = os.path.splitext(fileIn)[0]
-fileOut =  base + ".h"
-
-stringBuffer = "\t"
-countBytes = 0
-print("reading file: " + fileIn)
-
-for byte in openFileToByte_generator(fileIn,16):
-    countBytes += 1
-    stringBuffer += "0x"+binascii.hexlify(byte).decode('ascii')+", "
-    if countBytes%16 is 0:
-    	stringBuffer += "\n\t"
-
-
-
-stringBuffer = "#include <Arduino.h> \n \n#define FUSEE_BIN_SIZE " + str(countBytes) + "\nconst PROGMEM byte fuseeBin[FUSEE_BIN_SIZE] = {\n" + stringBuffer + "\n};"
+stringBuffer = makeArray(filename)
 
 print("\nwriting file: " + fileOut)
 text_file = open(fileOut, "w")
